@@ -1,0 +1,66 @@
+services:
+  auth:
+    build:
+      context: . # Path to your application (Dockerfile should be here)
+      dockerfile: Auth/Dockerfile
+    ports:
+      - "8002:80" # Expose your application's port
+      - "8003:443" # Expose your application's port
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      ASPNETCORE_URLS: "https://+;http://+"
+      ASPNETCORE_HTTPS_PORTS: 443
+      ASPNETCORE_HTTP_PORTS: 80
+      ASPNETCORE_Kestrel__Certificates__Default__Password: 1234598765
+      ASPNETCORE_Kestrel__Certificates__Default__Path: /https/auth.pfx
+      Database__ConnectionString: "Server=docker.for.mac.localhost;Initial Catalog=Auth;Persist Security Info=False;User ID=auth-user;Password=XMkHJtcT9RZv4;MultipleActiveResultSets=False;Encrypt=False;TrustServerCertificate=True;Connection Timeout=30;"
+      JWTInformation__ValidAudience: "https://localhost:5001"
+      JWTInformation__ValidIssuer: "https://localhost:5001"
+      JWTInformation__TokenExpiryTimeInHour: "8"
+      Cookie__Domain: "localhost"
+      Cookie__Path: "/api/v1"
+      Cookie__Secure: "True"
+      Cookie__SameSite: "Lax"
+      Logging__LogLevel__Default: Debug
+      AuthTwoFactorAuthentication__EMailVerificationEndpoint : "/api/v1/auth/email-verification"
+      AuthenticationType: "JWT"
+      PublicUrls : "['/swagger','api/v1/login,'api/v1/register']"
+
+      Secret_Vault_Name: ""
+      Secrets__JWTKey_Secret: "123456789123456789123456789123456789123456789"
+      Secrets__ApiKeys: "['client1-api-key']"
+      Secrets__AuthenticationPassPhrase : "wH5b92rB0xdOhsVWuH3d"
+      Secrets__TwoFactorAuthenticationPassPhrase: "auth-service-apps-phrase"
+
+  gateway:
+    build:
+      context: . # Path to your application (Dockerfile should be here)
+      dockerfile: Auth/Dockerfile
+    ports:
+      - "8000:80" # Expose your application's port
+      - "8001:443" # Expose your application's port
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      ASPNETCORE_URLS: "https://+;http://+"
+      ASPNETCORE_HTTPS_PORTS: 443
+      ASPNETCORE_HTTP_PORTS: 80
+      ASPNETCORE_Kestrel__Certificates__Default__Password: 1234598765
+      ASPNETCORE_Kestrel__Certificates__Default__Path: /https/auth.pfx
+      JWTInformation__ValidAudience: "https://localhost:5001"
+      JWTInformation__ValidIssuer: "https://localhost:5001"
+      JWTInformation__TokenExpiryTimeInHour: "8"
+      Cookie__Domain: "localhost"
+      Cookie__Path: "/api/v1"
+      Cookie__Secure: "True"
+      Cookie__SameSite: "Lax"
+      Logging__LogLevel__Default: Debug
+      AuthTwoFactorAuthentication__EMailVerificationEndpoint : "/api/v1/auth/email-verification"
+      AuthenticationType: "JWT"
+      PublicUrls : "['/swagger','api/v1/auth/login','api/v1/auth/register']"
+
+      Secret_Vault_Name: ""
+      Secrets__JWTKey_Secret: "123456789123456789123456789123456789123456789"
+      Secrets__ApiKeys: "['client1-api-key']"
+      Secrets__AuthenticationPassPhrase : "wH5b92rB0xdOhsVWuH3d"
+      Secrets__TwoFactorAuthenticationPassPhrase: "auth-service-apps-phrase"
+
