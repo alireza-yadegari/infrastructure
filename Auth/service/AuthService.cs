@@ -43,7 +43,7 @@ internal class AuthService : IAuthService
     this.signInManager = signInManager;
     this.emailService = emailService;
   }
-  public async Task<string> LoginAsync(LoginRequest model)
+  public async Task<UserLoginResponse> LoginAsync(LoginRequest model)
   {
     var user = await userManager.FindByNameAsync(model.Username);
     if (user == null)
@@ -65,14 +65,14 @@ internal class AuthService : IAuthService
       if (string.IsNullOrEmpty(model.twoFactorAuth))
       {
         await SendTwoFactorCodeAsync(user);
-        throw new LoginException("User needs 2 factor Authentication!");
+        return new UserLoginResponse(string.Empty, Domain.Enumeration.LoginStatus.NeedTwoFactorAuthenticationCode, $"{user.Name} {user.LastName}");
       }
       else
       {
         var validated = await userManager.VerifyTwoFactorTokenAsync(user, "Email", model.twoFactorAuth);
         if (!validated)
         {
-          throw new LoginException("Two Factor Authentication is not valid");
+          return new UserLoginResponse(string.Empty, Domain.Enumeration.LoginStatus.TwoFactorAuthenticationCodeNotValid, $"{user.Name} {user.LastName}");
         }
       }
     }
@@ -83,7 +83,7 @@ internal class AuthService : IAuthService
     var jwt = await configurationService.GetJWTKeyAsync();
 
     string token = await commonAuthService.GenerateTokenAsync(new Common.Auth.Dto.AuthGenerateTokenRequest(passPhrase, jwt.ValidAudience, jwt.ValidIssuer, jwt.Secret, jwt.TokenExpiryTimeInHour, user.UserName, user.Id, userRoles?.ToList()));
-    return token;
+    return new UserLoginResponse(token, Domain.Enumeration.LoginStatus.LoggedIn, $"{user.Name} {user.LastName}");
   }
 
   public async Task<AuthenticationProperties> ExternalLoginAsync(string provider, string redirectUrl)
@@ -152,8 +152,7 @@ internal class AuthService : IAuthService
 
     }
 
-    var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
-    await SendEMailConfirmation(user.UserName, $"{user.Name} {user.LastName}", user.Email, token);
+    await SendEMailConfirmation(user);
     return user;
   }
 
@@ -203,30 +202,41 @@ internal class AuthService : IAuthService
       throw new LoginException("Invalid 2-Factor authentication provider");
     }
 
+    var companyName = await configurationService.GetCompanyNameAsync();
+
     var token = await userManager.GenerateTwoFactorTokenAsync(user, "Email");
-    await emailService.SendEmailAsync(new Common.Email.Dto.SendEmailRequest(user.Email, "Login One Time Password", token, null));
+
+    var emailTemplate = File.ReadAllText("../Auth/Constants/EMailTemplate/2-factor-authentication-code-template.html");
+    var emailBody = emailTemplate.Replace("{{CODE}}", token);
+    emailBody = emailBody.Replace("{{COMPANY_NAME}}", companyName);
+    emailBody = emailBody.Replace("{{FULL_NAME}}", $"{user.Name} {user.LastName}");
+
+    await emailService.SendEmailAsync(new Common.Email.Dto.SendEmailRequest(user.Email, "Login One Time Password", emailBody, null));
 
   }
-  private async Task SendEMailConfirmation(string username, string fullname, string email, string token)
+  private async Task SendEMailConfirmation(User user)
   {
     StringBuilder stringBuilder = new StringBuilder();
     var emailLink = (await configurationService.GetTwoFactorAuthenticationAsync())?.EMailVerificationEndpoint;
+
+    var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+
 
     var passPhrase = await configurationService.GetTwoFactorAuthenticationPassPhraseAsync();
     var companyName = await configurationService.GetCompanyNameAsync();
 
     stringBuilder.Append(emailLink);
     stringBuilder.Append("?");
-    stringBuilder.Append($"user={await encryptionService.EncryptAsync(username, passPhrase)}");
+    stringBuilder.Append($"user={await encryptionService.EncryptAsync(user.UserName, passPhrase)}");
     stringBuilder.Append("&");
     stringBuilder.Append($"token={token}");
 
     var emailTemplate = File.ReadAllText("../Auth/Constants/EMailTemplate/email-confirmation-template.html");
     var emailBody = emailTemplate.Replace("{{CONFIRMATION_EMAIL_ADDRESS}}", stringBuilder.ToString());
     emailBody = emailBody.Replace("{{COMPANY_NAME}}", companyName);
-    emailBody = emailBody.Replace("{{FULL_NAME}}", fullname);
+    emailBody = emailBody.Replace("{{FULL_NAME}}", $"{user.Name} {user.LastName}");
 
-    await emailService.SendEmailAsync(new Common.Email.Dto.SendEmailRequest(email, "Confirm Email Address", emailBody, null));
+    await emailService.SendEmailAsync(new Common.Email.Dto.SendEmailRequest(user.Email, "Confirm Email Address", emailBody, null));
 
   }
 

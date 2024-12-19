@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authentication;
 namespace Auth.Domain.Service;
   internal interface IAuthService
   {
-    Task<string> LoginAsync(LoginRequest model);
+    Task<UserLoginResponse> LoginAsync(LoginRequest model);
     Task<User> RegisterAsync(RegisterRequest model, string role);
     Task<Guid> GetUserIdFromTokenAsync(string encryptedToken);
     Task<AuthenticationProperties> ExternalLoginAsync(string provider, string redirectUrl);

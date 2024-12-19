@@ -20,35 +20,45 @@ public static class AuthEndpoints
         ) =>
     {
 
-      var encryptedToken = await authService.LoginAsync(loginRequest);
+      var response = await authService.LoginAsync(loginRequest);
       var authenticationType = await configurationService.GetAuthenticationTypeAsync();
-      if (authenticationType == "Cookie")
+
+      if (response.Status == Auth.Domain.Enumeration.LoginStatus.LoggedIn)
       {
-        var cookieOption = await configurationService.GetCookieOptionAsync();
-        var cookieOptions = new CookieOptions()
+        if (authenticationType == "Cookie")
         {
-          Expires = cookieOption.Expires,
-          HttpOnly = cookieOption.HttpOnly,
-          Secure = cookieOption.Secure,
-          Path = cookieOption.Path,
-          SameSite = (SameSiteMode)Enum.Parse(typeof(SameSiteMode), cookieOption.SameSite, true),
-        };
+          var cookieOption = await configurationService.GetCookieOptionAsync();
+          var cookieOptions = new CookieOptions()
+          {
+            Expires = cookieOption.Expires,
+            HttpOnly = cookieOption.HttpOnly,
+            Secure = cookieOption.Secure,
+            Path = cookieOption.Path,
+            SameSite = (SameSiteMode)Enum.Parse(typeof(SameSiteMode), cookieOption.SameSite, true),
+          };
 
-        if (!string.IsNullOrEmpty(cookieOption.Domain))
-        {
-          cookieOptions.Domain = cookieOption.Domain;
+          if (!string.IsNullOrEmpty(cookieOption.Domain))
+          {
+            cookieOptions.Domain = cookieOption.Domain;
+          }
+
+          httpContext.Response.Cookies.Append(GeneralConstant.AuthCookieName, response.Token, cookieOptions);
         }
-
-        httpContext.Response.Cookies.Append(GeneralConstant.AuthCookieName, encryptedToken, cookieOptions);
+        else
+        {
+          httpContext.Response.Headers.Authorization = new Microsoft.Extensions.Primitives.StringValues($"Bearer {response.Token}");
+        }
       }
       else
       {
-        httpContext.Response.Headers.Authorization = new Microsoft.Extensions.Primitives.StringValues($"Bearer {encryptedToken}");
+        httpContext.Response.Cookies.Delete(GeneralConstant.AuthCookieName);
+        httpContext.Response.Headers.Authorization = "";
       }
 
-      return true;
+      return response;
     })
     .WithTags("Authentication")
+    .WithSummary("Login")
     .WithOpenApi();
 
     app.MapPost("api/v1/external-login", async (
@@ -82,7 +92,6 @@ public static class AuthEndpoints
    .WithOpenApi();
 
     app.MapPost("api/v1/enable-2fa", async (
-         string? remoteError,
          [FromServices] IAuthService authService,
           [FromServices] IConfigurationService configurationService,
          HttpContext httpContext) =>
@@ -90,7 +99,7 @@ public static class AuthEndpoints
        await authService.EnableTwoFactorAsync(await httpContext.Request.ToUserId(authService, configurationService));
      })
     .WithTags("Authentication")
-    .WithSummary("External Login Callback")
+    .WithSummary("Enable two factor authentication")
     .WithOpenApi();
 
     app.MapPost("api/v1/logout", async (

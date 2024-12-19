@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Two-Factor Authentication Code</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      background-color: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      background-color: #007bff;
+      color: #ffffff;
+      padding: 20px;
+      text-align: center;
+      font-size: 24px;
+    }
+    .content {
+      padding: 20px;
+      color: #333333;
+      line-height: 1.6;
+      text-align: center;
+    }
+    .code {
+      display: inline-block;
+      margin: 20px auto;
+      padding: 10px 20px;
+      font-size: 24px;
+      font-weight: bold;
+      color: #007bff;
+      background-color: #f4f4f4;
+      border: 2px dashed #007bff;
+      border-radius: 5px;
+    }
+    .footer {
+      background-color: #f4f4f4;
+      text-align: center;
+      padding: 10px;
+      font-size: 12px;
+      color: #666666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      Your 2FA Code
+    </div>
+    <div class="content">
+      <p>Hello {{FULL_NAME}},</p>
+      <p>We received a request to log in to your account. Use the code below to complete your login:</p>
+      <div class="code">{{CODE}}</div>
+      <p>This code is valid for the next 10 minutes. If you didn't request this, please ignore this email or contact our support team immediately.</p>
+      <p>Best regards,<br>{{COMPANY_NAME}} Team</p>
+    </div>
+    <div class="footer">
+      © 2024 {{COMPANY_NAME}}. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>

@@ -14,19 +14,20 @@ internal static class ExceptionHelper
 
     context.Response.ContentType = "application/json";
 
-    if (exceptionHandlerPathFeature?.Error is LoginException customException)
+    if (exceptionHandlerPathFeature?.Error is LoginException ||
+    exceptionHandlerPathFeature?.Error is ValidateException)
     {
       // Handle CustomException
-      context.Response.StatusCode = customException.StatusCode;
+      context.Response.StatusCode = StatusCodes.Status401Unauthorized;
       await context.Response.WriteAsJsonAsync(new
       {
-        error = customException.Message,
+        error = exceptionHandlerPathFeature?.Error.Message,
         statusCode = StatusCodes.Status401Unauthorized
       });
     }
-    else if (exceptionHandlerPathFeature?.Error is ExternalLoginException _ ||
-    exceptionHandlerPathFeature?.Error is NotFoundUserException _ ||
-    exceptionHandlerPathFeature?.Error is RegisterException _)
+    else if (exceptionHandlerPathFeature?.Error is ExternalLoginException ||
+    exceptionHandlerPathFeature?.Error is NotFoundUserException ||
+    exceptionHandlerPathFeature?.Error is RegisterException)
     {
       // Handle CustomException
       context.Response.StatusCode = StatusCodes.Status400BadRequest;
