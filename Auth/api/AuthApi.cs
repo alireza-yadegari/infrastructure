@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using Auth.Domain.Dto;
 using Auth.Domain.Model;
 using Auth.Domain.Service;
 using Auth.Helpers;
@@ -50,6 +51,48 @@ public static class AuthEndpoints
     .WithTags("Authentication")
     .WithOpenApi();
 
+    app.MapPost("api/v1/external-login", async (
+            string provider,
+            string returnUrl,
+            [FromServices] IAuthService authService,
+            HttpContext httpContext) =>
+        {
+          var redirectUrl = $"/auth/external-login-callback?returnUrl={returnUrl}";
+          var properties = await authService.ExternalLoginAsync(provider, redirectUrl);
+          return new { redirectUrl, properties };
+        })
+   .WithTags("Authentication")
+   .WithSummary("External Login")
+   .WithOpenApi();
+
+    app.MapPost("api/v1/external-login-callback", async (
+            string? remoteError,
+            [FromServices] IAuthService authService,
+            HttpContext httpContext) =>
+        {
+          if (remoteError != null)
+          {
+            throw new ExternalLoginException(remoteError);
+          }
+
+          await authService.ExternalLoginCallbackAsync();
+        })
+   .WithTags("Authentication")
+   .WithSummary("External Login Callback")
+   .WithOpenApi();
+
+    app.MapPost("api/v1/enable-2fa", async (
+         string? remoteError,
+         [FromServices] IAuthService authService,
+          [FromServices] IConfigurationService configurationService,
+         HttpContext httpContext) =>
+     {
+       await authService.EnableTwoFactorAsync(await httpContext.Request.ToUserId(authService, configurationService));
+     })
+    .WithTags("Authentication")
+    .WithSummary("External Login Callback")
+    .WithOpenApi();
+
     app.MapPost("api/v1/logout", async (
       [FromServices] IConfigurationService configurationService,
       HttpContext httpContext) =>
@@ -80,10 +123,24 @@ public static class AuthEndpoints
       {
         throw new RegisterException("There is an error");
       }
-      return true;
+      return new UserRegisterResponse(user.Name, user.LastName, !user.EmailConfirmed);
     })
     .WithTags("Authentication")
     .WithSummary("Register New User");
+
+    app.MapGet("api/v1/email-verification", async (
+      [FromServices] IAuthService authService,
+      [FromQuery] string token,
+      [FromQuery] string user,
+      HttpContext httpContext
+      ) =>
+      {
+        await authService.ConfirmAccount(user, token.Replace(" ", "+"));
+
+        return "Your Account has been confirmed!";
+      })
+      .WithTags("Authentication")
+      .WithSummary("Confirm New User Account");
 
     app.MapPost("api/v1/get-userid", async (
              [FromServices] IAuthService authService,

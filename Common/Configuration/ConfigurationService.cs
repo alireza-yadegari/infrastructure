@@ -119,4 +119,37 @@ public class ConfigurationService : IConfigurationService
   {
     return JsonConvert.DeserializeObject<List<string>>(configuration["CorsWhiteList"]);
   }
+
+  public async Task<MailSettings?> GetMailSettingsAsync()
+  {
+    var rootSection = configuration.GetRequiredSection("MailSettings");
+
+    if (rootSection == null)
+    {
+      return null;
+    }
+
+    var result = new MailSettings(
+      rootSection.GetSection("DisplayName").Value ?? "",
+      rootSection.GetSection("Host").Value ?? "",
+      rootSection.GetSection("Mail").Value ?? "",
+      int.Parse(rootSection.GetSection("Port").Value ?? "0")
+    );
+
+
+    var secret = await cacheService.GetAsync<string>("EMail_Password");
+    if (secret == null)
+    {
+      secret = await secretManagementService.GetSecretAsync("EMail_Password");
+      await cacheService.SetAsync("EMail_Password", secret, 8 * 60);
+    }
+
+    result = result with { Password = secret };
+    return result;
+  }
+
+  public async Task<string> GetCompanyNameAsync()
+  {
+    return configuration["CompanyName"];
+  }
 }

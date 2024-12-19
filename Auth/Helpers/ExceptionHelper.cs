@@ -24,6 +24,18 @@ internal static class ExceptionHelper
         statusCode = StatusCodes.Status401Unauthorized
       });
     }
+    else if (exceptionHandlerPathFeature?.Error is ExternalLoginException _ ||
+    exceptionHandlerPathFeature?.Error is NotFoundUserException _ ||
+    exceptionHandlerPathFeature?.Error is RegisterException _)
+    {
+      // Handle CustomException
+      context.Response.StatusCode = StatusCodes.Status400BadRequest;
+      await context.Response.WriteAsJsonAsync(new
+      {
+        error = exceptionHandlerPathFeature?.Error.Message,
+        statusCode = StatusCodes.Status400BadRequest
+      });
+    }
     else if (exceptionHandlerPathFeature?.Error is Exception ex)
     {
       // Handle generic exceptions

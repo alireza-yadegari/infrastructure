@@ -18,7 +18,5 @@ namespace Auth.Domain.Model;
 
     public required string Password { get; set; }
 
-    public string? EmailConfirmationCode { get; set; }
-
     public bool? ChangePassword { get; set; }
   }

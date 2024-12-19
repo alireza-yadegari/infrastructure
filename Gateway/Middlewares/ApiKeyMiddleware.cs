@@ -40,7 +40,7 @@ internal class ApiKeyMiddleware
     {
       context.Response.StatusCode = StatusCodes.Status403Forbidden;
       await context.Response.WriteAsJsonAsync("Invalid API Key.");
-      return;
+      return; 
     }
 
     await _next(context);

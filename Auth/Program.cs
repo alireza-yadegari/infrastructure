@@ -1,4 +1,3 @@
-using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Auth.DataAccess;
@@ -10,11 +9,11 @@ using Common.Auth;
 using Common.Cache;
 using Common.Configuration;
 using Common.Constants;
+using Common.Email;
 using Common.Encryption;
 using Common.SecretManagement;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -66,6 +65,8 @@ builder.Services.AddSingleton<ISecretManagementService>(serviceProvider =>
 
 builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
 builder.Services.AddSingleton<IConfigurationService, ConfigurationService>();
+builder.Services.AddTransient<IEmailService,EmailService>();
+
 builder.Services.AddTransient<IEncryptionService, EncryptionService>();
 builder.Services.AddTransient<ICommonAuthService, CommonAuthService>();
 builder.Services.AddTransient<IAuthService, AuthService>();
