@@ -61,36 +61,6 @@ public static class AuthEndpoints
     .WithSummary("Login")
     .WithOpenApi();
 
-    app.MapPost("api/v1/external-login", async (
-            string provider,
-            string returnUrl,
-            [FromServices] IAuthService authService,
-            HttpContext httpContext) =>
-        {
-          var redirectUrl = $"/auth/external-login-callback?returnUrl={returnUrl}";
-          var properties = await authService.ExternalLoginAsync(provider, redirectUrl);
-          return new { redirectUrl, properties };
-        })
-   .WithTags("Authentication")
-   .WithSummary("External Login")
-   .WithOpenApi();
-
-    app.MapPost("api/v1/external-login-callback", async (
-            string? remoteError,
-            [FromServices] IAuthService authService,
-            HttpContext httpContext) =>
-        {
-          if (remoteError != null)
-          {
-            throw new ExternalLoginException(remoteError);
-          }
-
-          await authService.ExternalLoginCallbackAsync();
-        })
-   .WithTags("Authentication")
-   .WithSummary("External Login Callback")
-   .WithOpenApi();
-
     app.MapPost("api/v1/enable-2fa", async (
          [FromServices] IAuthService authService,
           [FromServices] IConfigurationService configurationService,

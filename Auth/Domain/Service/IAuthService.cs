@@ -8,8 +8,6 @@ namespace Auth.Domain.Service;
     Task<UserLoginResponse> LoginAsync(LoginRequest model);
     Task<User> RegisterAsync(RegisterRequest model, string role);
     Task<Guid> GetUserIdFromTokenAsync(string encryptedToken);
-    Task<AuthenticationProperties> ExternalLoginAsync(string provider, string redirectUrl);
-    Task ExternalLoginCallbackAsync();
     Task EnableTwoFactorAsync(Guid userId);
     Task ConfirmAccount(string encryptedUsername, string encryptedCode);
   }

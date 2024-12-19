@@ -1,4 +1,3 @@
-using System.Drawing;
 using System.Text;
 using System.Transactions;
 using Auth.Domain.Dto;
@@ -9,7 +8,6 @@ using Common.Auth;
 using Common.Configuration;
 using Common.Email;
 using Common.Encryption;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Newtonsoft.Json;
 
@@ -84,26 +82,6 @@ internal class AuthService : IAuthService
 
     string token = await commonAuthService.GenerateTokenAsync(new Common.Auth.Dto.AuthGenerateTokenRequest(passPhrase, jwt.ValidAudience, jwt.ValidIssuer, jwt.Secret, jwt.TokenExpiryTimeInHour, user.UserName, user.Id, userRoles?.ToList()));
     return new UserLoginResponse(token, Domain.Enumeration.LoginStatus.LoggedIn, $"{user.Name} {user.LastName}");
-  }
-
-  public async Task<AuthenticationProperties> ExternalLoginAsync(string provider, string redirectUrl)
-  {
-    return signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
-  }
-
-  public async Task ExternalLoginCallbackAsync()
-  {
-    var info = await signInManager.GetExternalLoginInfoAsync();
-    if (info == null)
-    {
-      throw new ExternalLoginException("External login info not available.");
-    }
-
-    var result = await signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false);
-    if (!result.Succeeded)
-    {
-      throw new ExternalLoginException($"There is no account for this user in {info.LoginProvider}");
-    }
   }
 
   public async Task EnableTwoFactorAsync(Guid userId)
