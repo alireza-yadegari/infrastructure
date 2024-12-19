@@ -8,16 +8,16 @@ internal class PayPalPaymentProvider : IPaymentProvider
 
   public async Task<PaymentResponse> ProcessPayment(PaymentRequest request)
   {
-    // Call PayPal API
+    throw new NotImplementedException();
   }
 
   public async Task<RefundResponse> ProcessRefund(RefundRequest request)
   {
-    // Call PayPal API
+    throw new NotImplementedException();
   }
 
   public async Task<ProviderStatus> CheckStatus()
   {
-    // Check PayPal status
+    throw new NotImplementedException();
   }
 }

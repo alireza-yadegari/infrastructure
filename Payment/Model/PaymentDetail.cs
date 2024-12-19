@@ -12,8 +12,5 @@ internal class PaymentDetail
   [ForeignKey("Payment")]
   public Guid PaymentId { get; set; }
   public virtual Payment? Payment { get; set; }
-  public required string Provider { get; set; }
-  public decimal Amount { get; set; }
-  public PaymentStatus Status { get; set; }
   public DateTime TimeStamp { get; set; }
 }

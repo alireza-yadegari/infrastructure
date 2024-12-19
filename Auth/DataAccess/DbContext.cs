@@ -18,10 +18,6 @@ namespace Auth.DataAccess;
       optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
     }
 
-    public DbSet<User> MafiaUser { get; set; }
-
-    public DbSet<Role> MafiaRoles { get; set; }
-
     protected override void OnModelCreating(ModelBuilder builder)
     {
       base.OnModelCreating(builder);
