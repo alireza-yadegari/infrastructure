@@ -9,6 +9,7 @@ using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Readers;
 using Microsoft.OpenApi.Writers;
 using Gateway.Helpers;
+using Yarp.ReverseProxy.Transforms;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,7 +27,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ISecretManagementService>(serviceProvider =>
        {
          var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-         var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+         var environment = configuration["SECRET_ENVIRONMENT"] ?? "Development";
 
          return environment == "Production"
               ? new AzureSecretManagementService(configuration)
@@ -42,7 +43,7 @@ builder.Services.AddTransient<ICommonAuthService, CommonAuthService>();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddReverseProxy()
-    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy")); 
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
 
 // Add services to the container.
@@ -86,7 +87,6 @@ var app = builder.Build();
 
 app.UseMiddleware<ApiKeyMiddleware>();
 app.UseMiddleware<Common.Middlewares.AuthorizationMiddleware>();
-
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

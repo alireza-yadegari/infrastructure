@@ -148,8 +148,27 @@ public class ConfigurationService : IConfigurationService
     return result;
   }
 
-  public async Task<string> GetCompanyNameAsync()
+  public async Task<EmailTemplate> GetEmailTemplateAsync()
   {
-    return configuration["CompanyName"];
+    var rootSection = configuration.GetRequiredSection("Email_Template");
+
+    if (rootSection == null)
+    {
+      throw new KeyNotFoundException("Email Template does not exists");
+    }
+
+    var variableSection = rootSection.GetSection("Variables");
+
+    if (variableSection == null)
+    {
+      throw new KeyNotFoundException("Email Template variable does not exists");
+    }
+
+    var result = new EmailTemplate(
+      rootSection.GetSection("FilePath").Value ?? "",
+      new EmailTemplateVariables(variableSection.GetSection("CompanyName").Value ?? "")
+    );
+
+    return result;
   }
 }

@@ -6,6 +6,8 @@ services:
     ports:
       - "8002:80" # Expose your application's port
       - "8003:443" # Expose your application's port
+    networks:
+      - gateway-network
     environment:
       ASPNETCORE_ENVIRONMENT: "Production"
       ASPNETCORE_URLS: "https://+;http://+"
@@ -24,26 +26,34 @@ services:
       Logging__LogLevel__Default: Debug
       AuthTwoFactorAuthentication__EMailVerificationEndpoint : "/api/v1/auth/email-verification"
       AuthenticationType: "JWT"
-      PublicUrls : "['/swagger','api/v1/login,'api/v1/register']"
-      CompanyName: "Infrastructure"
+      PublicUrls : "['/swagger','/api/v1/login,'/api/v1/register']"
       MailSettings__Mail: "mafiagamegroups@gmail.com"
       MailSettings__DisplayName: "Infrastructure Group"
       MailSettings__Host: "smtp.gmail.com"
       MailSettings__Port: 587
+      Email_Template__FilePath: "/app/email-template/"
+      Email_Template__Variables__CompanyName: "Infrastructure"
+      CorsWhiteList: "['http:localhost:8000','https:localhost:80001']"
+      SECRET_ENVIRONMENT: "Development"
 
-      Secret_Vault_Name: ""
-      Secrets__JWTKey_Secret: "123456789123456789123456789123456789123456789"
-      Secrets__ApiKeys: "['client1-api-key']"
-      Secrets__AuthenticationPassPhrase : "wH5b92rB0xdOhsVWuH3d"
-      Secrets__TwoFactorAuthenticationPassPhrase: "auth-service-apps-phrase"
+
+
+      Secret_Vault_Name: ${Secret_Vault_Name}
+      Secrets__JWTKey_Secret: ${SECRETS__JWTKey_Secret}
+      Secrets__ApiKeys: ${SECRETS__ApiKeys}
+      Secrets__AuthenticationPassPhrase : ${SECRETS__AuthenticationPassPhrase}
+      Secrets__TwoFactorAuthenticationPassPhrase: ${SECRETS__TwoFactorAuthenticationPassPhrase}
+      Secrets__EMail_Password: ${SECRETS__EMail_Password}
 
   gateway:
     build:
       context: . # Path to your application (Dockerfile should be here)
-      dockerfile: Auth/Dockerfile
+      dockerfile: Gateway/Dockerfile
     ports:
       - "8000:80" # Expose your application's port
       - "8001:443" # Expose your application's port
+    networks:
+      - gateway-network
     environment:
       ASPNETCORE_ENVIRONMENT: "Production"
       ASPNETCORE_URLS: "https://+;http://+"
@@ -61,17 +71,18 @@ services:
       Logging__LogLevel__Default: Debug
       AuthTwoFactorAuthentication__EMailVerificationEndpoint : "/api/v1/auth/email-verification"
       AuthenticationType: "JWT"
-      PublicUrls : "['/swagger','api/v1/auth/login','api/v1/auth/register']"
+      PublicUrls : "['/swagger','/api/v1/auth/login','/api/v1/auth/register']"
 
-      ReverseProxy__Routes__authRoute__ClusterId : "auth"
-      ReverseProxy__Routes__authRoute__Match__Path: "api/{version}/auth/{**catch-all}"
-      ReverseProxy__Routes__authRoute__Transforms__PathPattern: "/api/{version}/{**catch-all}"
-      ReverseProxy__Routes__Clusters__auth__Destinations__authDestination__Address: "http://localhost:5001"
+      ReverseProxy__Routes__authRoute__ClusterId: auth
+      ReverseProxy__Routes__authRoute__Match__Path: api/{version}/auth/{**catch-all} # Specify the path
+      ReverseProxy__Routes__authRoute__Transforms__0__PathPattern: /api/{version}/{**catch-all}
+      ReverseProxy__Clusters__auth__Destinations__authDestination__Address: http://auth:8002
 
-      Secret_Vault_Name: ""
-      Secrets__JWTKey_Secret: "123456789123456789123456789123456789123456789"
-      Secrets__ApiKeys: "['client1-api-key']"
-      Secrets__AuthenticationPassPhrase : "wH5b92rB0xdOhsVWuH3d"
-      Secrets__TwoFactorAuthenticationPassPhrase: "auth-service-apps-phrase"
+      Secret_Vault_Name: ${Secret_Vault_Name}
+      Secrets__JWTKey_Secret: ${SECRETS__JWTKey_Secret}
+      Secrets__ApiKeys: ${SECRETS__ApiKeys}
+      Secrets__AuthenticationPassPhrase : ${SECRETS__AuthenticationPassPhrase}
+      Secrets__TwoFactorAuthenticationPassPhrase: ${SECRETS__TwoFactorAuthenticationPassPhrase}
 
-
+networks:
+  gateway-network:

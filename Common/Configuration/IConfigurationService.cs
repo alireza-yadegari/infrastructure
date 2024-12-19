@@ -21,5 +21,5 @@ public interface IConfigurationService
 
   Task<MailSettings?> GetMailSettingsAsync();
 
-  Task<string> GetCompanyNameAsync();
+   Task<EmailTemplate> GetEmailTemplateAsync();
 }

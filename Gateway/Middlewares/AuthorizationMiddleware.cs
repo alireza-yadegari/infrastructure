@@ -2,6 +2,7 @@ using Common.Auth;
 using Common.Configuration;
 using Common.Constants;
 using Common.Encryption;
+using Newtonsoft.Json;
 
 namespace Common.Middlewares;
 
@@ -61,12 +62,12 @@ internal class AuthorizationMiddleware
       catch
       {
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        await context.Response.WriteAsJsonAsync("User is not Logged in.");
+        await context.Response.WriteAsJsonAsync("User is not Logged in(Gateway).");
       }
 
     }
 
     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-    await context.Response.WriteAsJsonAsync("User is not Logged in.");
+    await context.Response.WriteAsJsonAsync("User is not Logged in(Gateway)." + requestPath + "   "+ JsonConvert.SerializeObject(publicUrls));
   }
 }

@@ -180,13 +180,13 @@ internal class AuthService : IAuthService
       throw new LoginException("Invalid 2-Factor authentication provider");
     }
 
-    var companyName = await configurationService.GetCompanyNameAsync();
+    var emailTemplateConfig = await configurationService.GetEmailTemplateAsync();
 
     var token = await userManager.GenerateTwoFactorTokenAsync(user, "Email");
 
-    var emailTemplate = File.ReadAllText("../Auth/Constants/EMailTemplate/2-factor-authentication-code-template.html");
+    var emailTemplate = File.ReadAllText($"{emailTemplateConfig.FilePath}2-factor-authentication-code-template.html");
     var emailBody = emailTemplate.Replace("{{CODE}}", token);
-    emailBody = emailBody.Replace("{{COMPANY_NAME}}", companyName);
+    emailBody = emailBody.Replace("{{COMPANY_NAME}}", emailTemplateConfig.Variables.CompanyName);
     emailBody = emailBody.Replace("{{FULL_NAME}}", $"{user.Name} {user.LastName}");
 
     await emailService.SendEmailAsync(new Common.Email.Dto.SendEmailRequest(user.Email, "Login One Time Password", emailBody, null));
@@ -201,7 +201,7 @@ internal class AuthService : IAuthService
 
 
     var passPhrase = await configurationService.GetTwoFactorAuthenticationPassPhraseAsync();
-    var companyName = await configurationService.GetCompanyNameAsync();
+    var emailTemplateConfig = await configurationService.GetEmailTemplateAsync();
 
     stringBuilder.Append(emailLink);
     stringBuilder.Append("?");
@@ -209,9 +209,9 @@ internal class AuthService : IAuthService
     stringBuilder.Append("&");
     stringBuilder.Append($"token={token}");
 
-    var emailTemplate = File.ReadAllText("../Auth/Constants/EMailTemplate/email-confirmation-template.html");
+    var emailTemplate = File.ReadAllText($"{emailTemplateConfig.FilePath}email-confirmation-template.html");
     var emailBody = emailTemplate.Replace("{{CONFIRMATION_EMAIL_ADDRESS}}", stringBuilder.ToString());
-    emailBody = emailBody.Replace("{{COMPANY_NAME}}", companyName);
+    emailBody = emailBody.Replace("{{COMPANY_NAME}}", emailTemplateConfig.Variables.CompanyName);
     emailBody = emailBody.Replace("{{FULL_NAME}}", $"{user.Name} {user.LastName}");
 
     await emailService.SendEmailAsync(new Common.Email.Dto.SendEmailRequest(user.Email, "Confirm Email Address", emailBody, null));

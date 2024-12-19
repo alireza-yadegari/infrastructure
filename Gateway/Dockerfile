@@ -7,10 +7,18 @@ EXPOSE 8001
 # Use the .NET SDK as the build environment
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
-COPY ["Gateway/Gateway.csproj", "./"]
-RUN dotnet restore "Auth.csproj"
-COPY Auth/ .
-RUN dotnet publish "Auth.csproj" -c Release -o /app/publish
+
+COPY ["Infrastructure.sln", "./"]
+COPY ["Gateway/Gateway.csproj", "./Gateway/Gateway.csproj"]
+COPY ["Common/Common.csproj", "./Common/Common.csproj"]
+
+RUN dotnet restore "Common/Common.csproj"
+RUN dotnet restore "Gateway/Gateway.csproj"
+
+COPY Gateway/ ./Gateway
+COPY Common/ ./Common
+
+RUN dotnet publish "Gateway/Gateway.csproj" -c Release -o /app/publish
 
 # Build the runtime image
 FROM base AS final

@@ -56,7 +56,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ISecretManagementService>(serviceProvider =>
        {
          var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-         var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+         var environment = configuration["SECRET_ENVIRONMENT"] ?? "Development";
 
          return environment == "Production"
               ? new AzureSecretManagementService(configuration)
